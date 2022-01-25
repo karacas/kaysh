@@ -1,0 +1,13 @@
+diff
+.idea/*
+.nyc_output
+build
+coverage
+package-lock.json
+.timetracker.txt
+scratch/
+
+*.log
+.DS_Store
+node_modules
+dist
