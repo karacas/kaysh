@@ -1,7 +1,7 @@
 import { of } from 'rxjs/internal/observable/of';
 import { delay } from 'rxjs/internal/operators/delay';
-import { kaysh } from '../src';
-import { rxjsKaysh } from '../src/index';
+import { simpleCacheStore } from '../src';
+import { rxjsCacheStore } from '../src/index';
 import { StoredValueModelObjRoot } from '../src/lib/simple-cache-store';
 import { __objToHash } from '../src/lib/_aux';
 
@@ -18,16 +18,16 @@ const httpFake = (count = 0) => {
 
 // EXAMPLE
 const getDataCached = (count?, forceUpdate = false, options?) => {
-  const cache = rxjsKaysh.getRxjsObservableCacheValue(defaultKey, count);
+  const cache = rxjsCacheStore.getRxjsObservableCacheValue(defaultKey, count);
   if (forceUpdate === false && cache != null) return cache;
 
   const rv = httpFake(count);
 
-  return rxjsKaysh.setRxjsObservableCacheValue(rv, defaultKey, count, options);
+  return rxjsCacheStore.setRxjsObservableCacheValue(rv, defaultKey, count, options);
 };
 
 test('Test internal localStorage', async function() {
-  let _localStorage = kaysh.__getLocalStorageClass();
+  let _localStorage = simpleCacheStore.__getLocalStorageClass();
   let _objVal = { TEST: 'OK' };
 
   _localStorage.setItem('TEST', JSON.stringify(_objVal));
@@ -38,8 +38,8 @@ test('Test internal localStorage', async function() {
 
 test('Test set/get/reset localStorage', async function() {
   httpFakeCounter = 0;
-  kaysh.resetAllCaches();
-  let _localStorage = kaysh.__getLocalStorageClass();
+  simpleCacheStore.resetAllCaches();
+  let _localStorage = simpleCacheStore.__getLocalStorageClass();
 
   await getDataCached(1, false, {
     localStorage: true,
@@ -53,24 +53,24 @@ test('Test set/get/reset localStorage', async function() {
     localStorage: false,
   }).toPromise();
 
-  let localStorage = JSON.parse(_localStorage.getItem(kaysh.__getLocalStorageGlobalKey()));
+  let localStorage = JSON.parse(_localStorage.getItem(simpleCacheStore.__getLocalStorageGlobalKey()));
 
-  let status: any = kaysh.__getStoreState();
+  let status: any = simpleCacheStore.__getStoreState();
 
   expect(Object.keys(localStorage[defaultKey]).length).toBe(1);
   expect(Object.keys(status[defaultKey]).length).toBe(2);
 
   //TEST RESET
-  kaysh.resetCache(defaultKey, 1);
+  simpleCacheStore.resetCache(defaultKey, 1);
 
-  let localStorageNull = _localStorage.getItem(kaysh.__getLocalStorageGlobalKey());
+  let localStorageNull = _localStorage.getItem(simpleCacheStore.__getLocalStorageGlobalKey());
 
   expect(localStorageNull).toBe(null);
 });
 
 test('Test set/get rx localStorage', async function() {
   httpFakeCounter = 0;
-  let _localStorage = kaysh.__getLocalStorageClass();
+  let _localStorage = simpleCacheStore.__getLocalStorageClass();
 
   let hashVal = __objToHash(501);
 
@@ -91,8 +91,8 @@ test('Test set/get rx localStorage', async function() {
     },
   };
 
-  _localStorage.setItem(kaysh.__getLocalStorageGlobalKey(), JSON.stringify(expected));
-  kaysh.__setLocalStoredToStore();
+  _localStorage.setItem(simpleCacheStore.__getLocalStorageGlobalKey(), JSON.stringify(expected));
+  simpleCacheStore.__setLocalStoredToStore();
 
   httpFakeCounter++;
 
@@ -110,7 +110,7 @@ test('Test set/get rx localStorage', async function() {
   expect(cacheD.val).toBe(503);
 
   //RESET
-  kaysh.resetCache(defaultKey);
+  simpleCacheStore.resetCache(defaultKey);
   httpFakeCounter++;
 
   let cache2 = await getDataCached(501, false).toPromise();
@@ -120,14 +120,14 @@ test('Test set/get rx localStorage', async function() {
 
 test('Test auto localStorage Reset', async function() {
   httpFakeCounter = 0;
-  kaysh.resetAllCaches();
+  simpleCacheStore.resetAllCaches();
 
   let cacheA = await getDataCached(11, false, {
     localStorage: true,
   }).toPromise();
 
   httpFakeCounter++;
-  kaysh.__simulateRefresh();
+  simpleCacheStore.__simulateRefresh();
 
   let cacheB = await getDataCached(11, false).toPromise();
 
@@ -136,14 +136,14 @@ test('Test auto localStorage Reset', async function() {
 
 test('Test NO localStorage Reset', async function() {
   httpFakeCounter = 0;
-  kaysh.resetAllCaches();
+  simpleCacheStore.resetAllCaches();
 
   let cacheA = await getDataCached(11, false, {
     localStorage: false,
   }).toPromise();
 
   httpFakeCounter++;
-  kaysh.__simulateRefresh();
+  simpleCacheStore.__simulateRefresh();
 
   let cacheB = await getDataCached(11, false).toPromise();
 
@@ -152,22 +152,22 @@ test('Test NO localStorage Reset', async function() {
 
 test('Test auto localStorage Reset checkMaxGlobalTime', async function() {
   httpFakeCounter = 0;
-  kaysh.resetAllCaches();
-  kaysh.__setLocalStorageGlobals(undefined, 1);
+  simpleCacheStore.resetAllCaches();
+  simpleCacheStore.__setLocalStorageGlobals(undefined, 1);
 
   let cacheA = await getDataCached(11, false, {
     localStorage: true,
   }).toPromise();
 
   httpFakeCounter++;
-  kaysh.__simulateRefresh();
+  simpleCacheStore.__simulateRefresh();
 
   let cacheB = await getDataCached(11, false).toPromise();
 
   expect(cacheA.val).toBe(cacheB.val);
 
   await _timeout(100);
-  kaysh.__simulateRefresh();
+  simpleCacheStore.__simulateRefresh();
 
   let cacheC = await getDataCached(11, false).toPromise();
 

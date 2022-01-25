@@ -1,6 +1,7 @@
 {
   "name": "@karacas/kaysh",
-  "version": "0.1.38",
+  "description": "In-memory caching with support for RxJs, promises, and local-storage.",
+  "version": "0.1.40",
   "author": "karacas",
   "module": "dist/mylib.esm.js",
   "repository": {

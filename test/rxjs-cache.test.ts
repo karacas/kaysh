@@ -1,6 +1,6 @@
 import { of } from 'rxjs/internal/observable/of';
 import { delay } from 'rxjs/operators';
-import { rxjsKaysh } from '../src/';
+import { rxjsCacheStore } from '../src/';
 
 const _timeout = ms => new Promise(res => setTimeout(res, ms));
 
@@ -15,13 +15,13 @@ const httpFake = (count = 0) => {
 // EXAMPLE
 let _dataCachedSharedCount = 0;
 const getDataCached = (count?, forceUpdate = false, options?) => {
-  const cache = rxjsKaysh.getRxjsObservableCacheValue(defaultKey, count);
+  const cache = rxjsCacheStore.getRxjsObservableCacheValue(defaultKey, count);
   if (forceUpdate === false && cache != null) return cache;
 
   _dataCachedSharedCount++;
   const rv = httpFake(count);
 
-  return rxjsKaysh.setRxjsObservableCacheValue(rv, defaultKey, count, options);
+  return rxjsCacheStore.setRxjsObservableCacheValue(rv, defaultKey, count, options);
 };
 
 test('Test get ShareReplay', async function() {
@@ -64,7 +64,7 @@ test('Test get ShareReplay', async function() {
   expect(cache2.val).toBe(0);
   expect(cache3.val).toBe(0);
 
-  rxjsKaysh.resetCache(defaultKey);
+  rxjsCacheStore.resetCache(defaultKey);
 
   let cache4 = await getDataCached(0).toPromise();
   expect(_dataCachedSharedCount).toBe(2);
@@ -74,7 +74,7 @@ test('Test get ShareReplay', async function() {
 test('Test get cache A', async function() {
   let cache;
   httpFakeCounter = 0;
-  rxjsKaysh.resetAllCaches();
+  rxjsCacheStore.resetAllCaches();
 
   let test1 = getDataCached(0);
 
@@ -96,7 +96,7 @@ test('Test get cache A', async function() {
 
   httpFakeCounter++;
 
-  rxjsKaysh.resetCache(defaultKey);
+  rxjsCacheStore.resetCache(defaultKey);
 
   cache = await getDataCached(0).toPromise();
   expect(cache.val).toBe(2);
@@ -105,7 +105,7 @@ test('Test get cache A', async function() {
 test('Test get cache B', async function() {
   let cache;
   httpFakeCounter = 0;
-  rxjsKaysh.resetAllCaches();
+  rxjsCacheStore.resetAllCaches();
 
   cache = await getDataCached(0).toPromise();
   expect(cache.val).toBe(0);
@@ -121,7 +121,7 @@ test('Test get cache B', async function() {
   cache = await getDataCached(0, false).toPromise();
   expect(cache.val).toBe(1);
 
-  rxjsKaysh.resetAllCaches();
+  rxjsCacheStore.resetAllCaches();
 
   httpFakeCounter++;
 
@@ -132,7 +132,7 @@ test('Test get cache B', async function() {
 test('Test get cache noKey', async function() {
   let cache;
   httpFakeCounter = 0;
-  rxjsKaysh.resetAllCaches();
+  rxjsCacheStore.resetAllCaches();
 
   cache = await getDataCached().toPromise();
   expect(cache.val).toBe(0);
@@ -142,7 +142,7 @@ test('Test get cache noKey', async function() {
   cache = await getDataCached().toPromise();
   expect(cache.val).toBe(0);
 
-  rxjsKaysh.resetCache(defaultKey);
+  rxjsCacheStore.resetCache(defaultKey);
 
   cache = await getDataCached().toPromise();
   expect(cache.val).toBe(1);
@@ -151,7 +151,7 @@ test('Test get cache noKey', async function() {
 test('Test MaxTime', async function() {
   let cache;
   httpFakeCounter = 0;
-  rxjsKaysh.resetAllCaches();
+  rxjsCacheStore.resetAllCaches();
 
   let maxTime = 100;
 
@@ -188,7 +188,7 @@ test('Test MaxTime', async function() {
 test('Test MaxItems', async function() {
   let cache;
   httpFakeCounter = 0;
-  rxjsKaysh.resetAllCaches();
+  rxjsCacheStore.resetAllCaches();
 
   cache = await getDataCached(200, false, { maxItems: 1 }).toPromise();
   expect(cache.val).toBe(200);
@@ -221,13 +221,13 @@ test('Test MaxItems', async function() {
 
 let getDataCachedComplexCounter = 0;
 const getDataCachedComplex = (payLoad?, forceUpdate = false, options?) => {
-  const cache = rxjsKaysh.getRxjsObservableCacheValue(defaultKey, payLoad);
+  const cache = rxjsCacheStore.getRxjsObservableCacheValue(defaultKey, payLoad);
   if (forceUpdate === false && cache != null) return cache;
 
   const rv = of(typeof payLoad === 'string' ? payLoad : { ...payLoad, add: payLoad.add + 1 + getDataCachedComplexCounter });
   getDataCachedComplexCounter++;
 
-  return rxjsKaysh.setRxjsObservableCacheValue(rv, defaultKey, payLoad, options);
+  return rxjsCacheStore.setRxjsObservableCacheValue(rv, defaultKey, payLoad, options);
 };
 
 test('Test set/get rx localStorage', async function() {
@@ -252,13 +252,13 @@ test('Test set/get rx localStorage', async function() {
 
 let getDataCachedSimpleCounter = 0;
 const getDataCachedSimple = (payLoad?, forceUpdate = false, options?) => {
-  const cache = rxjsKaysh.getRxjsObservableCacheValue(defaultKey, payLoad);
+  const cache = rxjsCacheStore.getRxjsObservableCacheValue(defaultKey, payLoad);
   if (forceUpdate === false && cache != null) return cache;
 
   const rv = of(getDataCachedSimpleCounter === 0 ? payLoad : payLoad + getDataCachedSimpleCounter);
   getDataCachedSimpleCounter++;
 
-  return rxjsKaysh.setRxjsObservableCacheValue(rv, defaultKey, payLoad, options);
+  return rxjsCacheStore.setRxjsObservableCacheValue(rv, defaultKey, payLoad, options);
 };
 
 test('Test simpleValues', async function() {
