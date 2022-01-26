@@ -1,7 +1,6 @@
 import { StoredValueModelObj, __simpleCacheStore } from '../src/lib/simple-cache-store';
 
 const _log = console.log;
-const _timeout = ms => new Promise(res => setTimeout(res, ms));
 
 test('Test sortStoredValueModelByDate', function() {
   let objTest: StoredValueModelObj = {

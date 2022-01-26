@@ -1,9 +1,9 @@
 {
   "name": "@karacas/kaysh",
-  "description": "In-memory caching with support for RxJs, promises, and local-storage.",
-  "version": "0.1.42",
+  "description": "In-memory caching with support for RxJs observables, native promises, functions & methods. Optional localStorage.",
+  "version": "0.1.60",
   "author": "karacas",
-  "module": "dist/mylib.esm.js",
+  "module": "dist/kaysh.esm.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/karacas/kaysh"
@@ -17,16 +17,22 @@
     "src"
   ],
   "engines": {
-    "node": ">=14"
+    "npm": ">=2.0.0"
   },
+  "keywords": [
+    "RxJS",
+    "Cache",
+    "Observables"
+  ],
   "scripts": {
     "start": "tsdx watch",
     "build": "tsdx build",
-    "test": "tsdx test",
+    "test": "npm run test_clearCache && tsdx test",
     "test:watch": "tsdx test --watch",
     "test:coverage": "tsdx test --coverage",
     "test_clearCache": "npx jest --clearCache",
     "lint": "tsdx lint",
+    "ckeck": "npm run lint --fix && npm run test:coverage && npm run build && npm run size ",
     "prepare": "tsdx build",
     "size": "size-limit",
     "analyze": "size-limit --why"
@@ -45,12 +51,12 @@
   },
   "size-limit": [
     {
-      "path": "dist/mylib.cjs.production.min.js",
-      "limit": "20 KB"
+      "path": "dist/kaysh.cjs.production.min.js",
+      "limit": "40 KB"
     },
     {
-      "path": "dist/mylib.esm.js",
-      "limit": "20 KB"
+      "path": "dist/kaysh.esm.js",
+      "limit": "15 KB"
     }
   ],
   "dependencies": {

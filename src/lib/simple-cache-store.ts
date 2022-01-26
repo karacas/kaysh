@@ -1,8 +1,4 @@
-import { isObservable } from 'rxjs/internal/util/isObservable';
 import { __objToHash } from './_aux';
-
-//TODO: Name
-//TODO: Documentation
 
 const _isTest = process.env.NODE_ENV === 'test';
 
@@ -10,15 +6,17 @@ if (_isTest) if (false) console.log('test');
 
 const _log = console.log;
 
-let _localStorageParentKey = 'RXJS-CACHE-KEY-V1';
+let _localStorageParentKey = 'KAYSH-V1';
 let _localStorageMaxGlobalTime = 0;
 let _localStorage;
 let _localStorageLoaded = false;
+let _keyshEnabled = true;
+let _keyshLocalStorageEnabled = true;
 declare var window;
 
-const memoFuncPrefix = 'RXJS-CACHE-MEMO-FUNC__';
+const memoFuncPrefixId = 'KAYSH-CACHE-MEMO-FUNC__';
 
-_localStorage = window.localStorage;
+_localStorage = window?.localStorage;
 
 export interface StoredValueModelObjRoot {
   [key: string]: StoredValueModelObj;
@@ -38,7 +36,6 @@ export interface StoredValueModel {
 export interface DefaultConfigCacheModel {
   localStorage?: boolean;
   maxTime?: number;
-  maxTimeLocalStorage?: number;
   maxItems?: number;
 }
 
@@ -51,6 +48,7 @@ const defaultConfig: DefaultConfigCacheModel = {
 let store_state: StoredValueModelObjRoot = {};
 
 function setCacheValue(key: string, value: any, payloadToHash?: any, config?: DefaultConfigCacheModel) {
+  if (_keyshEnabled !== true) return;
   if (key == null) return;
   if (value === undefined) return;
 
@@ -92,6 +90,8 @@ function setCacheValue(key: string, value: any, payloadToHash?: any, config?: De
 }
 
 function getCacheValue(key: string, payloadToHash?: any): any {
+  if (_keyshEnabled !== true) return null;
+
   if (true && typeof window !== 'undefined' && _localStorageLoaded === false) __setLocalStoredToStore();
 
   if (store_state[key] == null) return store_state[key];
@@ -138,9 +138,9 @@ function resetAllCaches() {
   __clearLocalStorage();
 }
 
-function memoFunction(func: Function, prefix: string = memoFuncPrefix, config?: DefaultConfigCacheModel) {
+function memoFunction(func: Function, prefixId: string = memoFuncPrefixId, config?: DefaultConfigCacheModel): Function {
   let funcName = func.name || '__memoized';
-  let funcKey = prefix + func.name;
+  let funcKey = prefixId + func.name;
 
   if (false) _log('funcName', funcName);
 
@@ -158,16 +158,16 @@ function memoFunction(func: Function, prefix: string = memoFuncPrefix, config?: 
   return object[funcName];
 }
 
-function resetMemoFunction(funcOrName: Function | string, prefix: string = memoFuncPrefix) {
+function resetMemoFunction(funcOrName: Function | string, prefixId: string = memoFuncPrefixId): Function {
   let funcKey;
 
   if (typeof funcOrName === 'string') {
-    funcKey = prefix + funcOrName;
+    funcKey = prefixId + funcOrName;
   } else {
-    funcKey = prefix + funcOrName.name;
+    funcKey = prefixId + funcOrName.name;
   }
 
-  const memoized = function(...restArgs) {
+  const memoizedReset = function(...restArgs) {
     if (restArgs !== undefined && restArgs.length) {
       resetCache(funcKey, restArgs);
     } else {
@@ -175,10 +175,10 @@ function resetMemoFunction(funcOrName: Function | string, prefix: string = memoF
     }
   };
 
-  return memoized;
+  return memoizedReset;
 }
 
-function memoFunctionDecorator(config?: DefaultConfigCacheModel, prefix?) {
+function memoFunctionDecorator(config?: DefaultConfigCacheModel, prefixId?) {
   const instanceMap = new WeakMap();
   return (target, propertyKey, descriptor) => {
     const input = target[propertyKey]; // eslint-disable-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
@@ -192,7 +192,7 @@ function memoFunctionDecorator(config?: DefaultConfigCacheModel, prefix?) {
 
     descriptor.get = function() {
       if (!instanceMap.has(this)) {
-        const value = memoFunction(input, prefix, config);
+        const value = memoFunction(input, prefixId, config);
         instanceMap.set(this, value);
         return value;
       }
@@ -211,21 +211,28 @@ function __sortStoredValueModelByDate(StoredValuel: StoredValueModelObj, max: nu
 function __isRxjsObservableObj(value: any) {
   if (value == null) return false;
 
-  if (isObservable(value)) return true;
+  if (__isObservable(value)) return true;
 
   return typeof value === 'object' && '_isScalar' in value && 'source' in value;
 }
 
-//TODO: Validar con test
-function __isPromise(value: any) {
+function __isFunction(value: any): boolean {
+  return value != null && typeof value === 'function';
+}
+
+function __isObservable(value: any): boolean {
+  return value != null && typeof value === 'object' && __isFunction(value.lift) && __isFunction(value.subscribe);
+}
+
+function __isPromise(value: any): boolean {
   return value != null && Object.prototype.toString.call(value) === '[object Promise]';
 }
 
-function __isValidLocalStorageItem(val) {
-  return val != null && !__isRxjsObservableObj(val) && !__isPromise(val);
+function __isValidLocalStorageItem(val): boolean {
+  return !__isRxjsObservableObj(val) && !__isPromise(val);
 }
 
-function __isLocalStorageItem(val, isToLoadData = false) {
+function __isLocalStorageItem(val, isToLoadData = false): boolean {
   let rv = __isValidLocalStorageItem(val) && val?.config?.localStorage === true && val?.date > 0;
 
   if (isToLoadData) {
@@ -266,7 +273,9 @@ function __filterLocalStorageItems(state: any, isToLoadData?: boolean) {
 }
 
 function __updateLocalStorage() {
-  if (!_localStorage) return;
+  if (_keyshEnabled !== true || _keyshLocalStorageEnabled !== true) return null;
+
+  if (!_localStorage?.setItem) return;
 
   let store_stateClone = __filterLocalStorageItems(store_state);
 
@@ -301,6 +310,8 @@ function __getLocalStorageClass() {
 }
 
 function __setLocalStoredToStore() {
+  if (_keyshEnabled !== true || _keyshLocalStorageEnabled !== true) return null;
+
   if (_localStorage?.getItem == null || !_localStorageParentKey?.length) return;
   if (!_isTest && _localStorageLoaded) return;
 
@@ -320,7 +331,12 @@ function __getLocalStorageGlobalKey() {
   return _localStorageParentKey;
 }
 
-function __setLocalStorageGlobals(parentKey: string, maxGlobalTime: number = null) {
+function __setLocalStorageGlobals(
+  parentKey: string,
+  maxGlobalTime: number = null,
+  enabled: boolean = null,
+  localStorageEnabled: boolean = null
+) {
   if (parentKey == null && maxGlobalTime == null) return;
 
   __clearLocalStorage();
@@ -328,10 +344,14 @@ function __setLocalStorageGlobals(parentKey: string, maxGlobalTime: number = nul
   if (parentKey != null) _localStorageParentKey = parentKey;
 
   if (maxGlobalTime != null) _localStorageMaxGlobalTime = maxGlobalTime;
+
+  if (enabled != null) _keyshEnabled = !!enabled;
+
+  if (localStorageEnabled != null) _keyshLocalStorageEnabled = !!localStorageEnabled;
 }
 
 function __clearLocalStorage() {
-  if (_localStorage == null) return;
+  if (_localStorage?.removeItem == null) return;
 
   _localStorage.removeItem(_localStorageParentKey);
 

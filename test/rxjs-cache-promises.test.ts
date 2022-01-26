@@ -1,12 +1,11 @@
-import { simpleCacheStore } from '../src';
+import { simpleKaysh } from '../src';
 
 const _timeout = ms => new Promise(res => setTimeout(res, ms));
 let defaultKey = String(~~(Math.random() * 10000000));
-const _log = console.log;
 
 let getDataCachedComplexCounter = 0;
 const getDataCachedComplex = (payLoad?, forceUpdate = false, options?) => {
-  const cache = simpleCacheStore.getCacheValue(defaultKey, payLoad);
+  const cache = simpleKaysh.getCacheValue(defaultKey, payLoad);
   if (forceUpdate === false && cache != null) return cache;
 
   let promise = new Promise((resolve, reject) => {
@@ -16,7 +15,7 @@ const getDataCachedComplex = (payLoad?, forceUpdate = false, options?) => {
     }, 100);
   });
 
-  simpleCacheStore.setCacheValue(defaultKey, promise, payLoad, options);
+  simpleKaysh.setCacheValue(defaultKey, promise, payLoad, options);
 
   return promise;
 };
@@ -46,7 +45,7 @@ test('Test set/get promises resolved', async function() {
 });
 
 test('Test set/get promises resolved LS', async function() {
-  simpleCacheStore.resetAllCaches();
+  simpleKaysh.resetAllCaches();
   getDataCachedComplexCounter = 0;
   let res = { test: 3, test2: [1, 2, 4, 5, 6, 7], add: 0 };
 
@@ -58,7 +57,7 @@ test('Test set/get promises resolved LS', async function() {
     localStorage: true,
   });
 
-  simpleCacheStore.__simulateRefresh();
+  simpleKaysh.__simulateRefresh();
 
   let cacheC = getDataCachedComplex(res, false, {
     localStorage: true,
@@ -83,7 +82,7 @@ test('Test set/get promises resolved LS B', async function() {
   let cache2 = await getDataCachedComplex(res, false);
 
   await _timeout(100);
-  simpleCacheStore.__simulateRefresh();
+  simpleKaysh.__simulateRefresh();
 
   let cache3 = await getDataCachedComplex(res, false);
 
