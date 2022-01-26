@@ -482,9 +482,9 @@ var setRxjsObservableCacheValue = function setRxjsObservableCacheValue(stream, k
     if ($data != null) __simpleCacheStore.setCacheValue(key, $data, argsToHash, config);
   };
 
-  setCache(stream);
   var cacheReplay = stream.pipe(operators.shareReplay());
-  return cacheReplay.pipe(operators.tap(function (_data) {
+  setCache(cacheReplay);
+  return cacheReplay.pipe(operators.shareReplay(), operators.tap(function (_data) {
     return setCache(_data);
   }));
 };
