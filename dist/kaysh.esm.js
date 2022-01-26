@@ -98,14 +98,14 @@ var defaultConfig = {
 };
 var store_state = {};
 
-function setCacheValue(key, value, payloadToHash, config) {
+function setCacheValue(key, value, argsToHash, config) {
   var _ref, _extends2, _obj$config;
 
   if (_keyshEnabled !== true) return;
   if (key == null) return;
   if (value === undefined) return;
 
-  var _hash = __objToHash(payloadToHash);
+  var _hash = __objToHash(argsToHash);
 
   var _obj = {
     value: value,
@@ -125,19 +125,19 @@ function setCacheValue(key, value, payloadToHash, config) {
 
   if (__isPromise(value)) {
     value.then(function (_val) {
-      if (_val != null) setCacheValue(key, _val, payloadToHash, config);
+      if (_val != null) setCacheValue(key, _val, argsToHash, config);
     });
   }
 }
 
-function getCacheValue(key, payloadToHash) {
+function getCacheValue(key, argsToHash) {
   var _objKeyValue$config;
 
   if (_keyshEnabled !== true) return null;
   if ( typeof window !== 'undefined' && _localStorageLoaded === false) __setLocalStoredToStore();
   if (store_state[key] == null) return store_state[key];
 
-  var _hash = __objToHash(payloadToHash);
+  var _hash = __objToHash(argsToHash);
 
   var objKeyValue = store_state[key][_hash];
   if (objKeyValue == null) return objKeyValue;
@@ -148,11 +148,11 @@ function getCacheValue(key, payloadToHash) {
   return objKeyValue.value;
 }
 
-function resetCache(key, payloadToHash) {
+function resetCache(key, argsToHash) {
   if (key == null) return;
 
-  if (payloadToHash !== undefined) {
-    var _hash = __objToHash(payloadToHash);
+  if (argsToHash !== undefined) {
+    var _hash = __objToHash(argsToHash);
 
     if (store_state && key in store_state && _hash in store_state[key]) {
       var resetLocalStorage = __isLocalStorageItem(store_state[key][_hash]);
@@ -273,7 +273,7 @@ function __sortStoredValueModelByDate(StoredValuel, max) {
 function __isRxjsObservableObj(value) {
   if (value == null) return false;
   if (__isObservable(value)) return true;
-  return typeof value === 'object' && '_isScalar' in value && 'source' in value;
+  return typeof value === 'object' && value.hasOwnProperty('_isScalar') && value.hasOwnProperty('source');
 }
 
 function __isFunction(value) {
@@ -281,10 +281,14 @@ function __isFunction(value) {
 }
 
 function __isObservable(value) {
-  return value != null && typeof value === 'object' && __isFunction(value.lift) && __isFunction(value.subscribe);
+  var _value$constructor;
+
+  if ((value == null ? void 0 : value.value) != null && __isObservable(value == null ? void 0 : value.value)) return true;
+  return value != null && typeof value === 'object' && ((value == null ? void 0 : (_value$constructor = value.constructor) == null ? void 0 : _value$constructor.name) === 'Observable' || __isFunction(value.lift) && __isFunction(value.subscribe));
 }
 
 function __isPromise(value) {
+  if ((value == null ? void 0 : value.value) != null && __isPromise(value == null ? void 0 : value.value)) return true;
   return value != null && Object.prototype.toString.call(value) === '[object Promise]';
 }
 
@@ -414,7 +418,7 @@ function __setLocalStorageGlobals(parentKey, maxGlobalTime, enabled, localStorag
     localStorageEnabled = null;
   }
 
-  if (parentKey == null && maxGlobalTime == null) return;
+  if (parentKey == null && maxGlobalTime == null && enabled == null && localStorageEnabled == null) return;
 
   __clearLocalStorage();
 
@@ -466,25 +470,26 @@ var __simpleCacheStore = {
   __isPromise: __isPromise
 };
 
-var getRxjsObservableCacheValue = function getRxjsObservableCacheValue(key, payloadToHash) {
-  var cache = __simpleCacheStore.getCacheValue(key, payloadToHash);
+var getRxjsObservableCacheValue = function getRxjsObservableCacheValue(key, argsToHash) {
+  var cache = __simpleCacheStore.getCacheValue(key, argsToHash);
 
   if (cache == null) return cache;
   if (isObservable(cache)) return cache;
   return of(cache);
 };
 
-var setRxjsObservableCacheValue = function setRxjsObservableCacheValue(stream, key, payloadToHash, config) {
+var setRxjsObservableCacheValue = function setRxjsObservableCacheValue(stream, key, argsToHash, config) {
   if (stream == null || key == null) return of(null);
 
   var setCache = function setCache($data) {
-    if ($data != null) __simpleCacheStore.setCacheValue(key, $data, payloadToHash, config);
+    if ($data != null) __simpleCacheStore.setCacheValue(key, $data, argsToHash, config);
   };
 
-  setCache(stream.pipe(shareReplay()));
-  return stream.pipe(tap(function (_data) {
+  setCache(stream);
+  var cacheReplay = stream.pipe(shareReplay());
+  return cacheReplay.pipe(tap(function (_data) {
     return setCache(_data);
-  }), shareReplay());
+  }));
 };
 
 var __rxCacheStore = {

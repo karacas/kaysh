@@ -4,18 +4,18 @@ const _timeout = ms => new Promise(res => setTimeout(res, ms));
 let defaultKey = String(~~(Math.random() * 10000000));
 
 let getDataCachedComplexCounter = 0;
-const getDataCachedComplex = (payLoad?, forceUpdate = false, options?) => {
-  const cache = simpleKaysh.getCacheValue(defaultKey, payLoad);
+const getDataCachedComplex = (args?, forceUpdate = false, options?) => {
+  const cache = simpleKaysh.getCacheValue(defaultKey, args);
   if (forceUpdate === false && cache != null) return cache;
 
   let promise = new Promise((resolve, reject) => {
     setTimeout(() => {
-      resolve({ ...payLoad, add: payLoad.add + getDataCachedComplexCounter });
+      resolve({ ...args, add: args.add + getDataCachedComplexCounter });
       getDataCachedComplexCounter++;
     }, 100);
   });
 
-  simpleKaysh.setCacheValue(defaultKey, promise, payLoad, options);
+  simpleKaysh.setCacheValue(defaultKey, promise, args, options);
 
   return promise;
 };

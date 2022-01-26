@@ -3,7 +3,6 @@
 In-memory caching with support for RxJs observables, native promises, functions & methods. Optional localStorage.
 
 <br />
-<br />
 
 ### Cache Simple function
 
@@ -12,7 +11,7 @@ import { simpleKaysh } from '@karacas/kaysh';
 
 const optional_KayshOptions = {
   localStorage: true /*Promises and RxJs values automatically saved on resolve | dafault:false*/,
-  maxItems: 10 /* Maximum values cached per function/payload | dafault:10*/,
+  maxItems: 10 /* Maximum values cached per function/args | dafault:10*/,
   maxTime: 5 * 1000 /* Maximum time of the cached value in milliseconds | dafault:0(infinite) */,
 };
 
@@ -42,7 +41,6 @@ test('Test Simple function', function() {
 ```
 
 <br />
-<br />
 
 ### Class Method Cache
 
@@ -71,21 +69,20 @@ class CacheClassExampleWithDecorator {
 ```
 
 <br />
-<br />
 
 ### RxJs Cache
 
 ```typescript
 import { rxjsKaysh } from '@karacas/kaysh';
 
-const getRxJsCached = (payload: any, forceUpdate = false) => {
+const getRxJsCached = (payLoad: any, forceUpdate = false) => {
   //getCache
-  const cache = rxjsKaysh.getRxjsObservableCacheValue('getRxJsCached', payload);
+  const cache = rxjsKaysh.getRxjsObservableCacheValue('getRxJsCached', payLoad);
   if (forceUpdate === false && cache != null) return cache;
 
-  const rv = httpFake.get(payload);
+  const rv = httpFake.get(payLoad);
 
   //setCache
-  return rxjsKaysh.setRxjsObservableCacheValue(rv, 'getRxJsCached', payload, kayshOptions);
+  return rxjsKaysh.setRxjsObservableCacheValue(rv, 'getRxJsCached', payLoad, kayshOptions);
 };
 ```

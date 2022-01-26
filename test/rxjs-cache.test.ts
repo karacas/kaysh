@@ -220,14 +220,14 @@ test('Test MaxItems', async function() {
 });
 
 let getDataCachedComplexCounter = 0;
-const getDataCachedComplex = (payLoad?, forceUpdate = false, options?) => {
-  const cache = rxjsKaysh.getRxjsObservableCacheValue(defaultKey, payLoad);
+const getDataCachedComplex = (args?, forceUpdate = false, options?) => {
+  const cache = rxjsKaysh.getRxjsObservableCacheValue(defaultKey, args);
   if (forceUpdate === false && cache != null) return cache;
 
-  const rv = of(typeof payLoad === 'string' ? payLoad : { ...payLoad, add: payLoad.add + 1 + getDataCachedComplexCounter });
+  const rv = of(typeof args === 'string' ? args : { ...args, add: args.add + 1 + getDataCachedComplexCounter });
   getDataCachedComplexCounter++;
 
-  return rxjsKaysh.setRxjsObservableCacheValue(rv, defaultKey, payLoad, options);
+  return rxjsKaysh.setRxjsObservableCacheValue(rv, defaultKey, args, options);
 };
 
 test('Test set/get rx localStorage', async function() {
@@ -251,14 +251,14 @@ test('Test set/get rx localStorage', async function() {
 });
 
 let getDataCachedSimpleCounter = 0;
-const getDataCachedSimple = (payLoad?, forceUpdate = false, options?) => {
-  const cache = rxjsKaysh.getRxjsObservableCacheValue(defaultKey, payLoad);
+const getDataCachedSimple = (args?, forceUpdate = false, options?) => {
+  const cache = rxjsKaysh.getRxjsObservableCacheValue(defaultKey, args);
   if (forceUpdate === false && cache != null) return cache;
 
-  const rv = of(getDataCachedSimpleCounter === 0 ? payLoad : payLoad + getDataCachedSimpleCounter);
+  const rv = of(getDataCachedSimpleCounter === 0 ? args : args + getDataCachedSimpleCounter);
   getDataCachedSimpleCounter++;
 
-  return rxjsKaysh.setRxjsObservableCacheValue(rv, defaultKey, payLoad, options);
+  return rxjsKaysh.setRxjsObservableCacheValue(rv, defaultKey, args, options);
 };
 
 test('Test simpleValues', async function() {

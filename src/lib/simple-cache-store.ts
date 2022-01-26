@@ -47,12 +47,12 @@ const defaultConfig: DefaultConfigCacheModel = {
 
 let store_state: StoredValueModelObjRoot = {};
 
-function setCacheValue(key: string, value: any, payloadToHash?: any, config?: DefaultConfigCacheModel) {
+function setCacheValue(key: string, value: any, argsToHash?: any, config?: DefaultConfigCacheModel) {
   if (_keyshEnabled !== true) return;
   if (key == null) return;
   if (value === undefined) return;
 
-  const _hash = __objToHash(payloadToHash);
+  const _hash = __objToHash(argsToHash);
 
   const _obj = {
     value,
@@ -77,26 +77,26 @@ function setCacheValue(key: string, value: any, payloadToHash?: any, config?: De
 
   store_state[key] = stateObjs;
 
-  if (false) _log(JSON.stringify({ store_state, _hash, payloadToHash }, null, 2));
+  if (false) _log(JSON.stringify({ store_state, _hash, argsToHash }, null, 2));
 
   if (__isValidLocalStorageItem(value) && config?.localStorage === true) __updateLocalStorage();
 
   //check Promise
   if (__isPromise(value)) {
     value.then(_val => {
-      if (_val != null) setCacheValue(key, _val, payloadToHash, config);
+      if (_val != null) setCacheValue(key, _val, argsToHash, config);
     });
   }
 }
 
-function getCacheValue(key: string, payloadToHash?: any): any {
+function getCacheValue(key: string, argsToHash?: any): any {
   if (_keyshEnabled !== true) return null;
 
   if (true && typeof window !== 'undefined' && _localStorageLoaded === false) __setLocalStoredToStore();
 
   if (store_state[key] == null) return store_state[key];
 
-  const _hash = __objToHash(payloadToHash);
+  const _hash = __objToHash(argsToHash);
   const objKeyValue: StoredValueModel = store_state[key][_hash];
   if (objKeyValue == null) return objKeyValue;
 
@@ -112,11 +112,11 @@ function getCacheValue(key: string, payloadToHash?: any): any {
   return objKeyValue.value;
 }
 
-function resetCache(key: string, payloadToHash?: any) {
+function resetCache(key: string, argsToHash?: any) {
   if (key == null) return;
 
-  if (payloadToHash !== undefined) {
-    const _hash = __objToHash(payloadToHash);
+  if (argsToHash !== undefined) {
+    const _hash = __objToHash(argsToHash);
     if (store_state && key in store_state && _hash in store_state[key]) {
       let resetLocalStorage = __isLocalStorageItem(store_state[key][_hash]);
 
@@ -213,7 +213,7 @@ function __isRxjsObservableObj(value: any) {
 
   if (__isObservable(value)) return true;
 
-  return typeof value === 'object' && '_isScalar' in value && 'source' in value;
+  return typeof value === 'object' && value.hasOwnProperty('_isScalar') && value.hasOwnProperty('source');
 }
 
 function __isFunction(value: any): boolean {
@@ -221,10 +221,18 @@ function __isFunction(value: any): boolean {
 }
 
 function __isObservable(value: any): boolean {
-  return value != null && typeof value === 'object' && __isFunction(value.lift) && __isFunction(value.subscribe);
+  if (value?.value != null && __isObservable(value?.value)) return true;
+
+  return (
+    value != null &&
+    typeof value === 'object' &&
+    (value?.constructor?.name === 'Observable' || (__isFunction(value.lift) && __isFunction(value.subscribe)))
+  );
 }
 
 function __isPromise(value: any): boolean {
+  if (value?.value != null && __isPromise(value?.value)) return true;
+
   return value != null && Object.prototype.toString.call(value) === '[object Promise]';
 }
 
@@ -337,7 +345,7 @@ function __setLocalStorageGlobals(
   enabled: boolean = null,
   localStorageEnabled: boolean = null
 ) {
-  if (parentKey == null && maxGlobalTime == null) return;
+  if (parentKey == null && maxGlobalTime == null && enabled == null && localStorageEnabled == null) return;
 
   __clearLocalStorage();
 

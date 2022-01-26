@@ -15,9 +15,9 @@ export interface DefaultConfigCacheModel {
     maxTime?: number;
     maxItems?: number;
 }
-declare function setCacheValue(key: string, value: any, payloadToHash?: any, config?: DefaultConfigCacheModel): void;
-declare function getCacheValue(key: string, payloadToHash?: any): any;
-declare function resetCache(key: string, payloadToHash?: any): void;
+declare function setCacheValue(key: string, value: any, argsToHash?: any, config?: DefaultConfigCacheModel): void;
+declare function getCacheValue(key: string, argsToHash?: any): any;
+declare function resetCache(key: string, argsToHash?: any): void;
 declare function resetAllCaches(): void;
 declare function memoFunction(func: Function, prefixId?: string, config?: DefaultConfigCacheModel): Function;
 declare function resetMemoFunction(funcOrName: Function | string, prefixId?: string): Function;

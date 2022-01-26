@@ -5,8 +5,9 @@ build
 coverage
 package-lock.json
 .timetracker.txt
+.vscode/*
+.github/*
 scratch/
-
 *.log
 .DS_Store
 node_modules

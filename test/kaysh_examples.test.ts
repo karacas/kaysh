@@ -2,7 +2,7 @@ import { simpleKaysh } from '../src';
 
 const optional_KayshOptions = {
   localStorage: true /*Promises and RxJs values automatically saved on resolve | dafault:false*/,
-  maxItems: 10 /* Maximum values cached per function/payload | dafault:10*/,
+  maxItems: 10 /* Maximum values cached per function/args | dafault:10*/,
   maxTime: 5 * 1000 /* Maximum time of the cached value in milliseconds | dafault:0(infinite) */,
 };
 

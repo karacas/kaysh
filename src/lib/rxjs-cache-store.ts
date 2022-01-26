@@ -4,8 +4,8 @@ import { isObservable } from 'rxjs/internal/util/isObservable';
 import { shareReplay, tap } from 'rxjs/operators';
 import { DefaultConfigCacheModel, __simpleCacheStore } from './simple-cache-store';
 
-const getRxjsObservableCacheValue = (key: string, payloadToHash?: any): Observable<any> => {
-  const cache = __simpleCacheStore.getCacheValue(key, payloadToHash);
+const getRxjsObservableCacheValue = (key: string, argsToHash?: any): Observable<any> => {
+  const cache = __simpleCacheStore.getCacheValue(key, argsToHash);
 
   if (cache == null) return cache;
 
@@ -17,21 +17,20 @@ const getRxjsObservableCacheValue = (key: string, payloadToHash?: any): Observab
 const setRxjsObservableCacheValue = (
   stream: Observable<any>,
   key: string,
-  payloadToHash?: any,
+  argsToHash?: any,
   config?: DefaultConfigCacheModel
 ): Observable<any> => {
   if (stream == null || key == null) return of(null);
 
   const setCache = ($data: any) => {
-    if ($data != null) __simpleCacheStore.setCacheValue(key, $data, payloadToHash, config);
+    if ($data != null) __simpleCacheStore.setCacheValue(key, $data, argsToHash, config);
   };
 
-  setCache(stream.pipe(shareReplay()));
+  setCache(stream);
 
-  return stream.pipe(
-    tap((_data: any) => setCache(_data)),
-    shareReplay()
-  );
+  let cacheReplay = stream.pipe(shareReplay());
+
+  return cacheReplay.pipe(tap((_data: any) => setCache(_data)));
 };
 
 const __rxCacheStore = {
