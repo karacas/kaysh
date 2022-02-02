@@ -1,7 +1,7 @@
 {
   "name": "@karacas/kaysh",
   "description": "In-memory caching with support for RxJs observables, native promises, functions & methods. Optional localStorage.",
-  "version": "0.1.76",
+  "version": "0.1.89",
   "author": "karacas",
   "module": "dist/kaysh.esm.js",
   "repository": {
@@ -27,12 +27,12 @@
   "scripts": {
     "start": "tsdx watch",
     "build": "tsdx build",
-    "test": "npm run test_clearCache && tsdx test",
+    "test": "tsdx test",
     "test:watch": "tsdx test --watch",
     "test:coverage": "tsdx test --coverage",
     "test_clearCache": "npx jest --clearCache",
-    "lint": "tsdx lint",
-    "checkAll": "npm run lint --fix && npm run test:coverage && npm run build && npm run size ",
+    "lint": "tsdx lint ./src ./test",
+    "checkAll": "npm run lint --fix && npm run test_clearCache && npm run test:coverage && npm run build && npm run size ",
     "prepare": "tsdx build",
     "size": "size-limit",
     "analyze": "size-limit --why"

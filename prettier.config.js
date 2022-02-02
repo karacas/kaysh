@@ -1,5 +1,5 @@
 const rxjs_cache = {
-  printWidth: 140,
+  printWidth: 120,
   singleQuote: true,
   tabWidth: 2,
   trailingComma: 'es5',

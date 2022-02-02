@@ -19,8 +19,8 @@ declare function setCacheValue(key: string, value: any, argsToHash?: any, config
 declare function getCacheValue(key: string, argsToHash?: any): any;
 declare function resetCache(key: string, argsToHash?: any): void;
 declare function resetAllCaches(): void;
-declare function memoFunction(func: Function, prefixId?: string, config?: DefaultConfigCacheModel): Function;
-declare function resetMemoFunction(funcOrName: Function | string, prefixId?: string): Function;
+declare function memoFunction(func: Function, config?: DefaultConfigCacheModel, prefixId?: string): Function;
+declare function resetMemoFunction(function_Or_functionName: Function | string, prefixId?: string): Function;
 declare function memoFunctionDecorator(config?: DefaultConfigCacheModel, prefixId?: any): (target: any, propertyKey: any, descriptor: any) => void;
 declare function __sortStoredValueModelByDate(StoredValuel: StoredValueModelObj, max?: number): StoredValueModelObj;
 declare function __isPromise(value: any): boolean;

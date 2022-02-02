@@ -1,3 +1,35 @@
-import { __rxjsCacheStore } from './lib/rxjs-cache-store';
-import { __simpleCacheStore } from './lib/simple-cache-store';
-export { __simpleCacheStore as simpleKaysh, __rxjsCacheStore as rxjsKaysh };
+declare const kayshOperator: typeof import("./lib/rxjs-cache-store").kayshOperator;
+declare const kayshFlushOperator: (key: string, argsToHash?: any) => void;
+declare const kayshDecorator: (config?: import("./lib/simple-cache-store").DefaultConfigCacheModel, prefixId?: any) => (target: any, propertyKey: any, descriptor: any) => void;
+declare const kayshMemFunction: (func: Function, config?: import("./lib/simple-cache-store").DefaultConfigCacheModel, prefixId?: string) => Function;
+declare const kayshFlushMemFunction: (function_Or_functionName: string | Function, prefixId?: string) => Function;
+declare const kayshFlushAll: () => void;
+declare const kayshFlushValue: (key: string, argsToHash?: any) => void;
+declare const simpleKaysh: {
+    setCacheValue: (key: string, value: any, argsToHash?: any, config?: import("./lib/simple-cache-store").DefaultConfigCacheModel) => void;
+    getCacheValue: (key: string, argsToHash?: any) => any;
+    resetCache: (key: string, argsToHash?: any) => void;
+    resetAllCaches: () => void;
+    memoFunction: (func: Function, config?: import("./lib/simple-cache-store").DefaultConfigCacheModel, prefixId?: string) => Function;
+    memoFunctionDecorator: (config?: import("./lib/simple-cache-store").DefaultConfigCacheModel, prefixId?: any) => (target: any, propertyKey: any, descriptor: any) => void;
+    resetMemoFunction: (function_Or_functionName: string | Function, prefixId?: string) => Function;
+    __getLocalStorageClass: () => any;
+    __setLocalStoredToStore: () => any;
+    __clearLocalStorage: () => void;
+    __getLocalStorageGlobalKey: () => string;
+    __getStoreState: () => any;
+    __sortStoredValueModelByDate: (StoredValuel: import("./lib/simple-cache-store").StoredValueModelObj, max?: number) => import("./lib/simple-cache-store").StoredValueModelObj;
+    __simulateRefresh: () => void;
+    __setLocalStorageGlobals: (parentKey: string, maxGlobalTime?: number, enabled?: boolean, localStorageEnabled?: boolean) => void;
+    __isPromise: (value: any) => boolean;
+};
+declare const rxjsKaysh: {
+    observableCache: (stream: import("rxjs").Observable<any>, key: string, argsToHash?: any, config?: import("./lib/simple-cache-store").DefaultConfigCacheModel, forceUpdate?: boolean) => import("rxjs").Observable<any>;
+    kayshFlushOperator: (key: string, argsToHash?: any) => void;
+    kayshOperator: typeof import("./lib/rxjs-cache-store").kayshOperator;
+    getRxjsObservableCacheValue: (key: string, argsToHash?: any) => import("rxjs").Observable<any>;
+    setRxjsObservableCacheValue: (stream: import("rxjs").Observable<any>, key: string, argsToHash?: any, config?: import("./lib/simple-cache-store").DefaultConfigCacheModel) => import("rxjs").Observable<any>;
+    resetCache: (key: string, argsToHash?: any) => void;
+    resetAllCaches: () => void;
+};
+export { kayshOperator, kayshFlushOperator, kayshDecorator, kayshFlushMemFunction, kayshFlushAll, kayshFlushValue, kayshMemFunction, simpleKaysh, rxjsKaysh, };

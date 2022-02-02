@@ -1,5 +1,10 @@
 import { __objToHash } from './_aux';
 
+/*
+TODO: More test for shareReply
+      More test for pip operator and localStorage
+*/
+
 const _isTest = process.env.NODE_ENV === 'test';
 
 if (_isTest) if (false) console.log('test');
@@ -73,7 +78,8 @@ function setCacheValue(key: string, value: any, argsToHash?: any, config?: Defau
   //Check MaxItems
   let maxItems = Number(_obj?.config?.maxItems);
   let obj = store_state[key];
-  if (obj != null && Object.keys(obj).length > Number(maxItems)) stateObjs = __sortStoredValueModelByDate(stateObjs, maxItems);
+  if (obj != null && Object.keys(obj).length > Number(maxItems))
+    stateObjs = __sortStoredValueModelByDate(stateObjs, maxItems);
 
   store_state[key] = stateObjs;
 
@@ -103,7 +109,8 @@ function getCacheValue(key: string, argsToHash?: any): any {
   if (false && _isTest) _log(JSON.stringify(store_state, null, 2));
 
   //Is maxTime
-  if ((objKeyValue.config?.maxTime || objKeyValue.config.localStorage) && !__checkValidItemDate(objKeyValue)) return null;
+  if ((objKeyValue.config?.maxTime || objKeyValue.config.localStorage) && !__checkValidItemDate(objKeyValue))
+    return null;
 
   if (objKeyValue.value == null) return objKeyValue.value;
 
@@ -138,7 +145,7 @@ function resetAllCaches() {
   __clearLocalStorage();
 }
 
-function memoFunction(func: Function, prefixId: string = memoFuncPrefixId, config?: DefaultConfigCacheModel): Function {
+function memoFunction(func: Function, config?: DefaultConfigCacheModel, prefixId: string = memoFuncPrefixId): Function {
   let funcName = func.name || '__memoized';
   let funcKey = prefixId + func.name;
 
@@ -158,13 +165,13 @@ function memoFunction(func: Function, prefixId: string = memoFuncPrefixId, confi
   return object[funcName];
 }
 
-function resetMemoFunction(funcOrName: Function | string, prefixId: string = memoFuncPrefixId): Function {
+function resetMemoFunction(function_Or_functionName: Function | string, prefixId: string = memoFuncPrefixId): Function {
   let funcKey;
 
-  if (typeof funcOrName === 'string') {
-    funcKey = prefixId + funcOrName;
+  if (typeof function_Or_functionName === 'string') {
+    funcKey = prefixId + function_Or_functionName;
   } else {
-    funcKey = prefixId + funcOrName.name;
+    funcKey = prefixId + function_Or_functionName.name;
   }
 
   const memoizedReset = function(...restArgs) {
@@ -192,7 +199,7 @@ function memoFunctionDecorator(config?: DefaultConfigCacheModel, prefixId?) {
 
     descriptor.get = function() {
       if (!instanceMap.has(this)) {
-        const value = memoFunction(input, prefixId, config);
+        const value = memoFunction(input, config, prefixId);
         instanceMap.set(this, value);
         return value;
       }
@@ -298,7 +305,7 @@ function __updateLocalStorage() {
 }
 
 function __checkValidItemDate(objKeyValue: StoredValueModel): boolean {
-  let max = Number(objKeyValue.config?.maxTime);
+  let max = Number(objKeyValue.config?.maxTime || 0);
 
   if (objKeyValue.config.localStorage && _localStorageMaxGlobalTime > 0) {
     max = max === 0 ? _localStorageMaxGlobalTime : Math.min(max, _localStorageMaxGlobalTime);

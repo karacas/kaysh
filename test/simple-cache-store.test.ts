@@ -1,3 +1,4 @@
+import { kayshFlushMemFunction, kayshDecorator, kayshMemFunction } from '../src';
 import { StoredValueModelObj, __simpleCacheStore } from '../src/lib/simple-cache-store';
 
 const _log = console.log;
@@ -25,8 +26,8 @@ let funcTest = (v: number = 100) => {
   return count + v;
 };
 
-const funcTestMemo = __simpleCacheStore.memoFunction(funcTest);
-const resetFuncTestMemo = __simpleCacheStore.resetMemoFunction(funcTest);
+const funcTestMemo = kayshMemFunction(funcTest);
+const resetFuncTestMemo = kayshFlushMemFunction(funcTest);
 
 test('Test memoFunction', function() {
   count = -1;
@@ -105,16 +106,16 @@ class TestClass {
     return this.count + v;
   }
 
-  funcTestMemo = __simpleCacheStore.memoFunction(this._funcTest_);
-  resetFuncTestMemo = __simpleCacheStore.resetMemoFunction(this._funcTest_);
+  funcTestMemo = kayshMemFunction(this._funcTest_);
+  resetFuncTestMemo = kayshFlushMemFunction(this._funcTest_);
 
-  @__simpleCacheStore.memoFunctionDecorator()
+  @kayshDecorator()
   _funcTestDecorated(v: number = 100) {
     this.count++;
     return this.count + v;
   }
 
-  resetFuncTestDecorated = __simpleCacheStore.resetMemoFunction(this._funcTestDecorated);
+  resetFuncTestDecorated = kayshFlushMemFunction(this._funcTestDecorated);
 }
 
 let testClass = new TestClass();

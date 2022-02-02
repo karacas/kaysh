@@ -1,29 +1,49 @@
-import { simpleKaysh } from '../src';
+import { of } from 'rxjs';
+import { kayshFlushMemFunction, kayshFlushOperator, kayshMemFunction } from '../src';
+import { kayshOperator } from '../src/lib/rxjs-cache-store';
 
-const optional_KayshOptions = {
-  localStorage: true /*Promises and RxJs values automatically saved on resolve | dafault:false*/,
-  maxItems: 10 /* Maximum values cached per function/args | dafault:10*/,
+const optional_config = {
+  localStorage: true /* Uses localStorage / Promises and RxJs automatically save a resolved value | dafault:false */,
+  maxItems: 10 /* Maximum values cached per function/args | dafault:10 */,
   maxTime: 5 * 1000 /* Maximum time of the cached value in milliseconds | dafault:0(infinite) */,
 };
 
-const testFunction = val => String(Math.random()) + JSON.stringify(val);
+// Obserbable Operator
+const getObservable = (payLoad?) => {
+  return of(Math.random() + JSON.stringify(payLoad)).pipe(kayshOperator('getObservable', payLoad, optional_config));
+};
 
-//Cached Function
-const testFunctionCached = simpleKaysh.memoFunction(testFunction, 'optional_PrefixId', optional_KayshOptions);
+const flushObservableValue = (payLoad?) => kayshFlushOperator('getObservable', payLoad);
+const flushObservable = () => kayshFlushOperator('getObservable');
 
-//Flush Cached Function
-const flushTestFunctionCached = simpleKaysh.resetMemoFunction(testFunction, 'optional_PrefixId');
+test('TestObserbable Operator', async function() {
+  let value1 = await getObservable([1, 2]).toPromise();
+  let value2 = await getObservable([1, 2]).toPromise();
 
-//Expexts
+  expect(value1).toBe(value2);
+
+  flushObservableValue([1, 2]); // or flushObservable() for all values
+
+  let value3 = await getObservable([1, 2]).toPromise();
+  expect(value3).not.toBe(value1);
+});
+
+// Simple Function
+function testFunction(val) {
+  return String(Math.random()) + JSON.stringify(val);
+}
+
+const testFunctionMem = kayshMemFunction(testFunction, optional_config);
+const flush = kayshFlushMemFunction(testFunction);
+
 test('Test Simple function', function() {
-  let value1_A = testFunctionCached({ test: [1] });
-  let value1_B = testFunctionCached({ test: [1] });
-  let value2_A = testFunctionCached({ test: [2] });
-  expect(value1_A).toBe(value1_B);
-  expect(value1_A).not.toBe(value2_A);
+  let value1 = testFunctionMem({ test: [1] });
+  let value2 = testFunctionMem({ test: [1] });
 
-  flushTestFunctionCached();
+  expect(value1).toBe(value2);
 
-  let value1_flushed = testFunctionCached({ test: [1] });
-  expect(value1_A).not.toBe(value1_flushed);
+  flush({ test: [1] }); // or flush() for all values
+
+  let value3 = testFunctionMem({ test: [1] });
+  expect(value3).not.toBe(value1);
 });

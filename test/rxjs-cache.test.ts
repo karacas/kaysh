@@ -1,7 +1,8 @@
 import { of } from 'rxjs/internal/observable/of';
-import { delay } from 'rxjs/operators';
-import { rxjsKaysh } from '../src/';
+import { delay, map, tap } from 'rxjs/operators';
+import { kayshOperator, rxjsKaysh, simpleKaysh } from '../src/';
 
+const _log = console.log;
 const _timeout = ms => new Promise(res => setTimeout(res, ms));
 
 let defaultKey = String(~~(Math.random() * 10000000));
@@ -9,19 +10,17 @@ let defaultKey = String(~~(Math.random() * 10000000));
 let httpFakeCounter = 0;
 const httpFake = (count = 0) => {
   const val = { val: httpFakeCounter + count };
+
   return of(val).pipe(delay(10));
 };
 
 // EXAMPLE
 let _dataCachedSharedCount = 0;
 const getDataCached = (count?, forceUpdate = false, options?) => {
-  const cache = rxjsKaysh.getRxjsObservableCacheValue(defaultKey, count);
-  if (forceUpdate === false && cache != null) return cache;
-
-  _dataCachedSharedCount++;
-  const rv = httpFake(count);
-
-  return rxjsKaysh.setRxjsObservableCacheValue(rv, defaultKey, count, options);
+  return httpFake(count).pipe(
+    tap(() => _dataCachedSharedCount++),
+    kayshOperator(defaultKey, count, options, forceUpdate)
+  );
 };
 
 test('Test get ShareReplay', async function() {
@@ -168,7 +167,7 @@ test('Test MaxTime', async function() {
   cache = await getDataCached(0, false, { maxTime: maxTime }).toPromise();
   expect(cache.val).toBe(0);
 
-  await _timeout(maxTime);
+  await _timeout(maxTime + 10);
 
   cache = await getDataCached(0, false, { maxTime: maxTime }).toPromise();
   expect(cache.val).toBe(1);
@@ -179,7 +178,7 @@ test('Test MaxTime', async function() {
   cache = await getDataCached(0, false, { maxTime: maxTime }).toPromise();
   expect(cache.val).toBe(1);
 
-  await _timeout(maxTime);
+  await _timeout(maxTime + 10);
 
   cache = await getDataCached(0, false, { maxTime: maxTime }).toPromise();
   expect(cache.val).toBe(2);
@@ -221,16 +220,15 @@ test('Test MaxItems', async function() {
 
 let getDataCachedComplexCounter = 0;
 const getDataCachedComplex = (args?, forceUpdate = false, options?) => {
-  const cache = rxjsKaysh.getRxjsObservableCacheValue(defaultKey, args);
-  if (forceUpdate === false && cache != null) return cache;
-
-  const rv = of(typeof args === 'string' ? args : { ...args, add: args.add + 1 + getDataCachedComplexCounter });
-  getDataCachedComplexCounter++;
-
-  return rxjsKaysh.setRxjsObservableCacheValue(rv, defaultKey, args, options);
+  return of(typeof args === 'string' ? args : { ...args, add: args.add + 1 + getDataCachedComplexCounter }).pipe(
+    tap(v => {
+      getDataCachedComplexCounter++;
+    }),
+    kayshOperator(defaultKey, args, options, forceUpdate)
+  );
 };
 
-test('Test set/get rx localStorage', async function() {
+test('Test set/get rx', async function() {
   getDataCachedComplexCounter = 0;
   let res = { test: 1, test2: [1, 2, 4, 5, 6, 7], add: 0 };
 
@@ -252,13 +250,12 @@ test('Test set/get rx localStorage', async function() {
 
 let getDataCachedSimpleCounter = 0;
 const getDataCachedSimple = (args?, forceUpdate = false, options?) => {
-  const cache = rxjsKaysh.getRxjsObservableCacheValue(defaultKey, args);
-  if (forceUpdate === false && cache != null) return cache;
-
-  const rv = of(getDataCachedSimpleCounter === 0 ? args : args + getDataCachedSimpleCounter);
-  getDataCachedSimpleCounter++;
-
-  return rxjsKaysh.setRxjsObservableCacheValue(rv, defaultKey, args, options);
+  return of(getDataCachedSimpleCounter === 0 ? args : args + getDataCachedSimpleCounter).pipe(
+    tap(v => {
+      getDataCachedSimpleCounter++;
+    }),
+    kayshOperator(defaultKey, args, options, forceUpdate)
+  );
 };
 
 test('Test simpleValues', async function() {
@@ -324,4 +321,83 @@ test('Test simpleValues', async function() {
   await _timeout(16);
   let cacheI2 = await getDataCachedSimple(['A']).toPromise();
   expect(cacheI2).toStrictEqual(['A']);
+});
+
+const testCustomPipe = (args?, forceUpdate = false, options?) => {
+  return httpFake(args).pipe(
+    tap(() => _dataCachedSharedCount++),
+    kayshOperator('testCustomPipe', args, { localStorage: true }, forceUpdate)
+  );
+};
+
+test('Test customOperator', async function() {
+  httpFakeCounter = 0;
+  rxjsKaysh.resetAllCaches();
+
+  let obs = testCustomPipe();
+  let cache1 = obs.toPromise();
+  let cache2 = obs.toPromise();
+
+  expect(cache1).toStrictEqual(cache2);
+
+  httpFakeCounter++;
+
+  let obs2 = testCustomPipe();
+  let cache3 = await obs2.toPromise();
+  let cache4 = await obs2.toPromise();
+  let cache1B = await obs.toPromise();
+
+  expect(cache3).toStrictEqual(cache4);
+  expect(cache3).toStrictEqual(cache1B);
+  expect(cache3).not.toStrictEqual(cache1);
+
+  let obs3 = testCustomPipe(undefined, true);
+  let cache5 = await obs3.toPromise();
+  let cache6 = await obs3.toPromise();
+
+  expect(cache5).toStrictEqual(cache6);
+  expect(cache5).not.toStrictEqual(cache1B);
+
+  let obs4 = testCustomPipe(3);
+  let cache7 = await obs4.toPromise();
+  let cache8 = await obs4.toPromise();
+
+  expect(cache7).toStrictEqual(cache8);
+  expect(cache7).not.toStrictEqual(cache5);
+});
+
+test('Test customOperator LS', async function() {
+  httpFakeCounter = 0;
+  _dataCachedSharedCount = 0;
+  rxjsKaysh.resetAllCaches();
+
+  let _testCustomPipe1 = testCustomPipe();
+  httpFakeCounter++;
+  let _testCustomPipe2 = testCustomPipe();
+
+  let cache1 = await _testCustomPipe1.toPromise();
+  let cache2 = await _testCustomPipe2.toPromise();
+  expect(cache1.val).toStrictEqual(cache2.val);
+
+  let call2 = _dataCachedSharedCount;
+  expect(call2).toStrictEqual(1);
+
+  simpleKaysh.__simulateRefresh();
+
+  let cache3 = await testCustomPipe().toPromise();
+  expect(cache3.val).toStrictEqual(cache1.val);
+
+  let call3 = _dataCachedSharedCount;
+  expect(call3).toStrictEqual(call2);
+
+  simpleKaysh.resetCache('testCustomPipe');
+
+  let cache4 = await testCustomPipe().toPromise();
+  expect(cache4.val).not.toStrictEqual(cache1.val);
+
+  let call4 = _dataCachedSharedCount;
+  expect(call4).toStrictEqual(call3 + 1);
+
+  let cache5 = await testCustomPipe().toPromise();
+  expect(cache5.val).toStrictEqual(cache4.val);
 });

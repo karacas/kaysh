@@ -179,7 +179,7 @@ function resetAllCaches() {
   __clearLocalStorage();
 }
 
-function memoFunction(func, prefixId, config) {
+function memoFunction(func, config, prefixId) {
   var _object;
 
   if (prefixId === void 0) {
@@ -202,17 +202,17 @@ function memoFunction(func, prefixId, config) {
   return object[funcName];
 }
 
-function resetMemoFunction(funcOrName, prefixId) {
+function resetMemoFunction(function_Or_functionName, prefixId) {
   if (prefixId === void 0) {
     prefixId = memoFuncPrefixId;
   }
 
   var funcKey;
 
-  if (typeof funcOrName === 'string') {
-    funcKey = prefixId + funcOrName;
+  if (typeof function_Or_functionName === 'string') {
+    funcKey = prefixId + function_Or_functionName;
   } else {
-    funcKey = prefixId + funcOrName.name;
+    funcKey = prefixId + function_Or_functionName.name;
   }
 
   var memoizedReset = function memoizedReset() {
@@ -244,7 +244,7 @@ function memoFunctionDecorator(config, prefixId) {
 
     descriptor.get = function () {
       if (!instanceMap.has(this)) {
-        var value = memoFunction(input, prefixId, config);
+        var value = memoFunction(input, config, prefixId);
         instanceMap.set(this, value);
         return value;
       }
@@ -368,7 +368,7 @@ function __updateLocalStorage() {
 function __checkValidItemDate(objKeyValue) {
   var _objKeyValue$config2;
 
-  var max = Number((_objKeyValue$config2 = objKeyValue.config) == null ? void 0 : _objKeyValue$config2.maxTime);
+  var max = Number(((_objKeyValue$config2 = objKeyValue.config) == null ? void 0 : _objKeyValue$config2.maxTime) || 0);
 
   if (objKeyValue.config.localStorage && _localStorageMaxGlobalTime > 0) {
     max = max === 0 ? _localStorageMaxGlobalTime : Math.min(max, _localStorageMaxGlobalTime);
@@ -489,13 +489,108 @@ var setRxjsObservableCacheValue = function setRxjsObservableCacheValue(stream, k
   }));
 };
 
+var observableCache = function observableCache(stream, key, argsToHash, config, forceUpdate) {
+  if (forceUpdate === void 0) {
+    forceUpdate = false;
+  }
+
+  var cache = getRxjsObservableCacheValue(key, argsToHash);
+  if (forceUpdate === false && cache != null) return cache;
+  return setRxjsObservableCacheValue(stream, key, argsToHash, config);
+};
+
+function kayshOperator(key, argsToHash, config, forceUpdate) {
+  if (forceUpdate === void 0) {
+    forceUpdate = false;
+  }
+
+  function __shareReplayOperator() {
+    var subject;
+    var refCount = 0;
+    var subscription;
+    var hasError = false;
+    var isComplete = false;
+    return function shareReplayOperation(source) {
+      refCount++;
+      var innerSub;
+
+      if (!subject || hasError) {
+        hasError = false;
+        subject = new rxjs.ReplaySubject();
+        innerSub = subject.subscribe(this);
+        subscription = source.subscribe({
+          next: function next(value) {
+            subject.next(value);
+          },
+          error: function error(err) {
+            hasError = true;
+            subject.error(err);
+          },
+          complete: function complete() {
+            isComplete = true;
+            subscription = undefined;
+            subject.complete();
+          }
+        });
+
+        if (isComplete) {
+          subscription = undefined;
+        }
+      } else {
+        innerSub = subject.subscribe(this);
+      }
+
+      this.add(function () {
+        refCount--;
+        innerSub.unsubscribe();
+        innerSub = undefined;
+
+        if (subscription && !isComplete && refCount === 0) {
+          subscription.unsubscribe();
+          subscription = undefined;
+          subject = undefined;
+        }
+      });
+    };
+  }
+
+  return function (source) {
+    var cacheObs = observableCache(source, key, argsToHash, config, forceUpdate);
+    return cacheObs.lift(__shareReplayOperator());
+  };
+}
+
+var kayshFlushOperator = function kayshFlushOperator(key, argsToHash) {
+  return __simpleCacheStore.resetCache(key, argsToHash);
+};
+
 var __rxCacheStore = {
+  observableCache: observableCache,
+  kayshFlushOperator: kayshFlushOperator,
+  kayshOperator: kayshOperator,
   getRxjsObservableCacheValue: getRxjsObservableCacheValue,
   setRxjsObservableCacheValue: setRxjsObservableCacheValue,
   resetCache: __simpleCacheStore.resetCache,
   resetAllCaches: __simpleCacheStore.resetAllCaches
 };
 
-exports.rxjsKaysh = __rxCacheStore;
-exports.simpleKaysh = __simpleCacheStore;
+var kayshOperator$1 = __rxCacheStore.kayshOperator;
+var kayshFlushOperator$1 = __rxCacheStore.kayshFlushOperator;
+var kayshDecorator = __simpleCacheStore.memoFunctionDecorator;
+var kayshMemFunction = __simpleCacheStore.memoFunction;
+var kayshFlushMemFunction = __simpleCacheStore.resetMemoFunction;
+var kayshFlushAll = __simpleCacheStore.resetAllCaches;
+var kayshFlushValue = __simpleCacheStore.resetCache;
+var simpleKaysh = __simpleCacheStore;
+var rxjsKaysh = __rxCacheStore;
+
+exports.kayshDecorator = kayshDecorator;
+exports.kayshFlushAll = kayshFlushAll;
+exports.kayshFlushMemFunction = kayshFlushMemFunction;
+exports.kayshFlushOperator = kayshFlushOperator$1;
+exports.kayshFlushValue = kayshFlushValue;
+exports.kayshMemFunction = kayshMemFunction;
+exports.kayshOperator = kayshOperator$1;
+exports.rxjsKaysh = rxjsKaysh;
+exports.simpleKaysh = simpleKaysh;
 //# sourceMappingURL=kaysh.cjs.development.js.map
