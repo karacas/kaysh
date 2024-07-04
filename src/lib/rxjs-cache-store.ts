@@ -26,6 +26,13 @@ const setRxjsObservableCacheValue = (
     if ($data != null) __simpleCacheStore.setCacheValue(key, $data, argsToHash, config);
   };
 
+  let useCacheReplay = config?.useCacheReplay !== false;
+
+  if (useCacheReplay === false) {
+    setCache(stream);
+    return stream.pipe(tap((_data: any) => setCache(_data)));
+  }
+
   let cacheReplay = stream.pipe(shareReplay());
 
   setCache(cacheReplay);

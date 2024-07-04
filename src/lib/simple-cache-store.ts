@@ -42,12 +42,14 @@ export interface DefaultConfigCacheModel {
   localStorage?: boolean;
   maxTime?: number;
   maxItems?: number;
+  useCacheReplay?: boolean;
 }
 
 const defaultConfig: DefaultConfigCacheModel = {
   localStorage: false,
   maxTime: 0,
   maxItems: 10,
+  useCacheReplay: true,
 };
 
 let store_state: StoredValueModelObjRoot = {};
