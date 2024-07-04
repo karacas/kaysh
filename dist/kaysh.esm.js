@@ -1,6 +1,6 @@
 import { of, ReplaySubject } from 'rxjs';
 import { isObservable } from 'rxjs/internal/util/isObservable';
-import { shareReplay, tap } from 'rxjs/operators';
+import { tap, shareReplay } from 'rxjs/operators';
 
 function _extends() {
   _extends = Object.assign || function (target) {
@@ -98,7 +98,8 @@ _localStorage = (_window = window) == null ? void 0 : _window.localStorage;
 var defaultConfig = {
   localStorage: false,
   maxTime: 0,
-  maxItems: 10
+  maxItems: 10,
+  useCacheReplay: true
 };
 var store_state = {};
 
@@ -488,6 +489,16 @@ var setRxjsObservableCacheValue = function setRxjsObservableCacheValue(stream, k
   var setCache = function setCache($data) {
     if ($data != null) __simpleCacheStore.setCacheValue(key, $data, argsToHash, config);
   };
+
+  var useCacheReplay = (config == null ? void 0 : config.useCacheReplay) !== false;
+
+  if (useCacheReplay === false) {
+    console.log(stream);
+    setCache(stream);
+    return stream.pipe(tap(function (_data) {
+      return setCache(_data);
+    }));
+  }
 
   var cacheReplay = stream.pipe(shareReplay());
   setCache(cacheReplay);

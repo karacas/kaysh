@@ -401,3 +401,22 @@ test('Test customOperator LS', async function() {
   let cache5 = await testCustomPipe().toPromise();
   expect(cache5.val).toStrictEqual(cache4.val);
 });
+
+test('Test get cache useCacheReplay', async function() {
+  let cache;
+  httpFakeCounter = 0;
+  rxjsKaysh.resetAllCaches();
+
+  let test1 = getDataCached(0, undefined, { useCacheReplay: false });
+
+  let subscription: any = await test1.subscribe(v => {
+    expect(v.val).toBe(0);
+  });
+
+  subscription.unsubscribe();
+
+  expect(subscription.closed).toBe(true);
+  expect(subscription?.isStopped).toBe(true);
+
+  // console.log(4444, subscription.closed, subscription?.isStopped);
+});

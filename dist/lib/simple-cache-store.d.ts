@@ -14,6 +14,7 @@ export interface DefaultConfigCacheModel {
     localStorage?: boolean;
     maxTime?: number;
     maxItems?: number;
+    useCacheReplay?: boolean;
 }
 declare function setCacheValue(key: string, value: any, argsToHash?: any, config?: DefaultConfigCacheModel): void;
 declare function getCacheValue(key: string, argsToHash?: any): any;
