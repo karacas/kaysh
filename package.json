@@ -1,7 +1,7 @@
 {
   "name": "@karacas/kaysh",
   "description": "In-memory caching with support for RxJs observables, native promises, functions & methods. Optional localStorage.",
-  "version": "0.1.92",
+  "version": "0.2.02",
   "author": "karacas",
   "module": "dist/kaysh.esm.js",
   "repository": {
