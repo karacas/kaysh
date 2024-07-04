@@ -484,15 +484,9 @@ var setRxjsObservableCacheValue = function setRxjsObservableCacheValue(stream, k
   };
 
   var useCacheReplay = (config == null ? void 0 : config.useCacheReplay) !== false;
-
-  if (useCacheReplay === false) {
-    console.log(stream);
-    setCache(stream);
-    return stream.pipe(operators.tap(function (_data) {
-      return setCache(_data);
-    }));
-  }
-
+  if (useCacheReplay === false) return stream.pipe(operators.tap(function (_data) {
+    return setCache(_data);
+  }));
   var cacheReplay = stream.pipe(operators.shareReplay());
   setCache(cacheReplay);
   return cacheReplay.pipe(operators.shareReplay(), operators.tap(function (_data) {
@@ -506,6 +500,7 @@ var observableCache = function observableCache(stream, key, argsToHash, config, 
   }
 
   var cache = getRxjsObservableCacheValue(key, argsToHash);
+  console.log(2222, cache);
   if (forceUpdate === false && cache != null) return cache;
   return setRxjsObservableCacheValue(stream, key, argsToHash, config);
 };

@@ -1,6 +1,7 @@
 import { of } from 'rxjs/internal/observable/of';
 import { delay, map, tap } from 'rxjs/operators';
 import { kayshOperator, rxjsKaysh, simpleKaysh } from '../src/';
+import { Subject } from 'rxjs/internal/Subject';
 
 const _log = console.log;
 const _timeout = ms => new Promise(res => setTimeout(res, ms));
@@ -402,21 +403,36 @@ test('Test customOperator LS', async function() {
   expect(cache5.val).toStrictEqual(cache4.val);
 });
 
-test('Test get cache useCacheReplay', async function() {
-  let cache;
-  httpFakeCounter = 0;
-  rxjsKaysh.resetAllCaches();
+const fakeHttpVal = () => {
+  const __subject = new Subject<any>();
 
-  let test1 = getDataCached(0, undefined, { useCacheReplay: false });
+  setTimeout(() => __subject.next(Math.random()), 10);
 
-  let subscription: any = await test1.subscribe(v => {
-    expect(v.val).toBe(0);
+  return __subject.pipe(kayshOperator('__subjectCache', null, { useCacheReplay: false }));
+};
+
+const fakeSubscription = () => {
+  let subscription: any = null;
+
+  let ___promise = new Promise((resolve, reject) => {
+    subscription = fakeHttpVal().subscribe(data => resolve(data));
   });
 
-  subscription.unsubscribe();
+  return { promise: ___promise, subscription };
+};
 
-  expect(subscription.closed).toBe(true);
-  expect(subscription?.isStopped).toBe(true);
+test('Test get cache useCacheReplay', async function() {
+  let _fakeSubscription = fakeSubscription();
+  let _fakeSubscription2 = fakeSubscription();
 
-  // console.log(4444, subscription.closed, subscription?.isStopped);
+  let cache1 = await _fakeSubscription.promise;
+  let cache2 = await _fakeSubscription2.promise;
+
+  expect(cache1).not.toStrictEqual(cache2);
+
+  let _fakeSubscription3 = fakeSubscription();
+  let cache3 = await _fakeSubscription3.promise;
+  if (false) console.log(cache1, cache2, cache3);
+
+  expect(cache2).toStrictEqual(cache3);
 });

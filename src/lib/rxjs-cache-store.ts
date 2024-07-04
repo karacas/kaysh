@@ -27,11 +27,7 @@ const setRxjsObservableCacheValue = (
   };
 
   let useCacheReplay = config?.useCacheReplay !== false;
-
-  if (useCacheReplay === false) {
-    setCache(stream);
-    return stream.pipe(tap((_data: any) => setCache(_data)));
-  }
+  if (useCacheReplay === false) return stream.pipe(tap((_data: any) => setCache(_data)));
 
   let cacheReplay = stream.pipe(shareReplay());
 
