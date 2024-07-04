@@ -507,7 +507,6 @@ var observableCache = function observableCache(stream, key, argsToHash, config, 
   }
 
   var cache = getRxjsObservableCacheValue(key, argsToHash);
-  console.log(2222, cache);
   if (forceUpdate === false && cache != null) return cache;
   return setRxjsObservableCacheValue(stream, key, argsToHash, config);
 };
